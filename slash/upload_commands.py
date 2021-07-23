@@ -35,6 +35,11 @@ def build_commands(*, guild=None):
                 "name": "down",
                 "description": "make the number 1 smaller",
                 "type": 1,
+            },
+            {
+                "name": "ui",
+                "description": "show an ui for changing the number",
+                "type": 1
             }
         ]
     }

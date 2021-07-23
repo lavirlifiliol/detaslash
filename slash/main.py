@@ -3,8 +3,11 @@ import os
 
 from flask import Flask, request, jsonify
 from deta import App, Deta
-from upload_commands import build_commands
 from discord_interactions import verify_key_decorator, InteractionType, InteractionResponseType
+
+from upload_commands import build_commands
+from ui import build_ui
+
 
 app = App(Flask(__name__))
 
@@ -28,12 +31,19 @@ def interact():
     if request.json['type'] == InteractionType.APPLICATION_COMMAND:
 
         data = request.json['data']
-        return jsonify({
-            'type': InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            'data': {
-                'content': up() if data['options'][0]['name'] == 'up' else down()
-            }
-        })
+        subcommand = data['options'][0]['name']
+        if subcommand in ['up', 'down']:
+            return jsonify({
+                'type': InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                'data': {
+                    'content': up() if subcommand == 'up' else down()
+                }
+            })
+        elif subcommand == 'ui':
+            return jsonify({
+                'type': InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, 
+                'data': build_ui()
+            })
 
 @app.lib.run(action='test')
 def test(ev):
