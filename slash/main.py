@@ -24,6 +24,15 @@ def down():
     number.put(number.get('number')['value'] - 1, 'number')
     return str(number.get('number')['value'])
 
+def handle_action(name):
+    return jsonify({
+        'type': InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        'data': {
+            'content': up() if name == 'up' else down()
+        }
+    })
+
+
 
 @app.route("/", methods=["POST"])
 @verify_key_decorator(os.environ['CLIENT_PUBLIC'])
@@ -33,17 +42,29 @@ def interact():
         data = request.json['data']
         subcommand = data['options'][0]['name']
         if subcommand in ['up', 'down']:
-            return jsonify({
-                'type': InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                'data': {
-                    'content': up() if subcommand == 'up' else down()
-                }
-            })
+            return handle_action(subcommand)
         elif subcommand == 'ui':
             return jsonify({
                 'type': InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, 
                 'data': build_ui()
             })
+
+    if request.json['type'] == InteractionType.MESSAGE_COMPONENT:
+        data = request.json['data']
+        cid = data['custom_id']
+        if cid in ['up', 'down']:
+            return handle_action(cid)
+        if cid == 'show':
+            return jsonify({
+                'type': InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                'data': {
+                    'content': str(number.get('number')['value'])
+                }
+            })
+        if cid == 'select':
+            [v] = data['values']
+            return handle_action(v)
+
 
 @app.lib.run(action='test')
 def test(ev):
